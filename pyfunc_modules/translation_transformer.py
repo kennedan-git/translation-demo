@@ -11,6 +11,18 @@ from transformers import M2M100Tokenizer, M2M100ForConditionalGeneration, pipeli
 class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
     def __init__(self, pipe):
         self._pipe = pipeline
+
+    def encode(self, txt): 
+        encoded_txt = self._pipe.tokenizer(txt, return_tensors="pt")
+        return encoded_txt 
+
+    def decode(self, encoded_txt): 
+        decoded_txt = self._pipe.tokenizer.batch_decode(encoded_txt, skip_special_tokens=True)
+        return decoded_txt
+
+    def generate(self, encoded_txt,target_lang): 
+        generated_txt = self._pipe.model.generate(encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id(target_lang))
+        return generated_txt
     
     def predict(self, df):
         """
@@ -36,8 +48,10 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         #encoded_text = self._tokenizer(texts[0], return_tensors="pt")
         self._pipe.tokenizer.src_lang = "en" #ex: 'en'
 
-        generated_tokens = self._pipe.model.generate(texts, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("pt"))
-        text_translations = self._pipe.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
+        encoded_src_text = df['content'].apply(self.encode)
+        generated_tokens = encoded_src_text.apply(self.generate("pt"))
+        text_translations = generated_tokens.apply(self.decode).tolist()
+
         df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": text_translations})
         return df_with_translations
 
