@@ -1,0 +1,16 @@
+{
+	"name": "transformers_ner_env",
+	"channels": ["defaults"],
+	"dependencies": [
+		"python=3.8.10",
+		"pip",
+		{
+			"pip": ["mlflow",
+				"pandas",
+				"torch",
+				"transformers", 
+                "sentencepiece"
+			]
+		}
+	]
+}
