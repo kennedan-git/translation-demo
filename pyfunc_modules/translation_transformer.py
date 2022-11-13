@@ -21,6 +21,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         return decoded_txt
 
     def generate(self, encoded_txt): 
+        self._pipe.model.to(self._pipe.device)
         generated_txt = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("pt"))
         return generated_txt
     
