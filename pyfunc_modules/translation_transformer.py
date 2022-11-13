@@ -35,7 +35,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         texts = df.content.values.tolist()
         ids = df.id.values.tolist()
         self._tokenizer.src_lang = srcLang #ex: 'en'
-        
+
         gen_tokens = self._model.generate(**model_inputs, forced_bos_token_id=self._tokenizer.get_lang_id(targetLang))
         text_translations = self._tokenizer.batch_decode(gen_tokens, skip_special_tokens=True)
         df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": text_translations})
@@ -50,5 +50,5 @@ def _load_pyfunc(data_path):
     device = 0 if torch.cuda.is_available() else -1
     tokenizer = M2M100Tokenizer.from_pretrained(data_path, padding=True)
     model = M2M100ForConditionalGeneration.from_pretrained(data_path)
-    translation = pipeline("translation", model=model, tokenizer=tokenizer, device=device)
+    translation = pipeline("translation", model=model, device=device)
     return TransformerTranslationModel(translation)
