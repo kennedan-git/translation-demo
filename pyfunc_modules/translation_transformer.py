@@ -65,6 +65,6 @@ def _load_pyfunc(data_path):
     """
     device = 0 if torch.cuda.is_available() else -1
     tokenizer = M2M100Tokenizer.from_pretrained(data_path)
-    model = M2M100ForConditionalGeneration.from_pretrained(data_path)
+    model = M2M100ForConditionalGeneration.from_pretrained(data_path).to(device)
     translation = pipeline("translation", model=model, tokenizer=tokenizer, device=device)
     return TransformerTranslationModel(translation)
