@@ -9,7 +9,7 @@ import sentencepiece
 from transformers import M2M100Tokenizer, M2M100ForConditionalGeneration, pipeline
 
 class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
-    def __init__(self, model, tokenizer):
+    def __init__(self, model,tokenizer):
         self._model = model
         self._tokenizer = tokenizer
     
@@ -31,8 +31,9 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
                 'content' (String) - original text or document objects
                 'translation (String) - translated text or document objects
         """
-        model_inputs = self._tokenizer(texts, return_tensors="pt")
+        
         texts = df.content.values.tolist()
+        model_inputs = self._tokenizer(texts, return_tensors="pt")
         ids = df.id.values.tolist()
         self._tokenizer.src_lang = srcLang #ex: 'en'
 
@@ -51,4 +52,4 @@ def _load_pyfunc(data_path):
     tokenizer = M2M100Tokenizer.from_pretrained(data_path)
     model = M2M100ForConditionalGeneration.from_pretrained(data_path)
     translation = pipeline("translation", model=model, tokenizer=tokenizer, device=device)
-    return TransformerTranslationModel(translation)
+    return TransformerTranslationModel(translation,tokenizer)
