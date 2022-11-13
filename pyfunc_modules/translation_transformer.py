@@ -14,14 +14,16 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
 
     def encode(self, txt): 
         encoded_txt = self._pipe.tokenizer(txt, return_tensors="pt")
+        encoded_txt = encoded_txt.to(self._pipe.device)
         return encoded_txt 
 
     def decode(self, encoded_txt): 
         decoded_txt = self._pipe.tokenizer.batch_decode(encoded_txt, skip_special_tokens=True)
+        decoded_txt = decoded_txt.to(self._pipe.device)
         return decoded_txt
 
-    def generate(self, encoded_txt): 
-        self._pipe.model.to(self._pipe.device)
+    def generate(self, **encoded_txt): 
+        #self._pipe.model.to(self._pipe.device)
         generated_txt = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("pt"))
         return generated_txt
     
