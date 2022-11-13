@@ -9,7 +9,7 @@ import sentencepiece
 from transformers import M2M100Tokenizer, M2M100ForConditionalGeneration, pipeline
 
 class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
-    def __init__(self, pipe):
+    def __init__(self, pipeline):
         self._pipe = pipeline
 
     def encode(self, txt): 
