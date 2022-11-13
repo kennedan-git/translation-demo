@@ -6,13 +6,14 @@ import mlflow
 import torch
 import pandas as pd
 import sentencepiece
-from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
+from transformers import M2M100Tokenizer, M2M100ForConditionalGeneration, pipeline
 
 class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
-    def __init__(self, model):
+    def __init__(self, model, tokenizer):
         self._model = model
+        self._tokenizer = tokenizer
     
-    def predict(self, df):
+    def predict(self, df, srcLang, targetLang):
         """
         Inference logic that uses a Huggingface Transformer translation pipeline and generates a translation.
         Parameters
@@ -30,10 +31,14 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
                 'content' (String) - original text or document objects
                 'translation (String) - translated text or document objects
         """
+        model_inputs = self._tokenizer(texts, return_tensors="pt")
         texts = df.content.values.tolist()
         ids = df.id.values.tolist()
-        text_translation = self._model(texts, batch_size=2)
-        df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": text_translation})
+        self._tokenizer.src_lang = srcLang #ex: 'en'
+        
+        gen_tokens = self._model.generate(**model_inputs, forced_bos_token_id=self._tokenizer.get_lang_id(targetLang))
+        text_translations = self._tokenizer.batch_decode(gen_tokens, skip_special_tokens=True)
+        df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": text_translations})
         return df_with_translations
 
 def _load_pyfunc(data_path):
@@ -43,7 +48,7 @@ def _load_pyfunc(data_path):
     MLflow Pyfunc loader modules treat the data_path argument as being in the local file system, i.e. in S3, ADLS or DBFS
     """
     device = 0 if torch.cuda.is_available() else -1
-    tokenizer = AutoTokenizer.from_pretrained(data_path, padding=True)
-    model = AutoModelForTokenClassification.from_pretrained(data_path)
+    tokenizer = M2M100Tokenizer.from_pretrained(data_path, padding=True)
+    model = M2M100ForConditionalGeneration.from_pretrained(data_path)
     translation = pipeline("translation", model=model, tokenizer=tokenizer, device=device)
     return TransformerTranslationModel(translation)
