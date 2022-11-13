@@ -34,7 +34,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
 
         texts = df.content.values.tolist()
         ids = df.id.values.tolist()
-        encoded_text = self._tokenizer(df.content.values, return_tensors="pt")
+        encoded_text = self._tokenizer(texts, return_tensors="pt")
         self._tokenizer.src_lang = "en" #ex: 'en'
 
         generated_tokens = self._model.generate(**encoded_text, forced_bos_token_id=self._tokenizer.get_lang_id("pt"))
