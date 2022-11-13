@@ -31,15 +31,15 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
                 'content' (String) - original text or document objects
                 'translation (String) - translated text or document objects
         """
-        
-        #texts = df.content.values.tolist()
-        model_inputs = self._tokenizer(df.content.values, return_tensors="pt")
+
+        texts = df.content.values.tolist()
         ids = df.id.values.tolist()
+        encoded_text = self._tokenizer(df.content.values, return_tensors="pt")
         self._tokenizer.src_lang = "en" #ex: 'en'
 
-        gen_tokens = self._model.generate(**model_inputs, forced_bos_token_id=self._tokenizer.get_lang_id("pt"))
-        text_translations = self._tokenizer.batch_decode(gen_tokens, skip_special_tokens=True)
-        df_with_translations = pd.DataFrame({"id": ids, "content": model_inputs, "translation": text_translations})
+        generated_tokens = self._model.generate(**encoded_text, forced_bos_token_id=self._tokenizer.get_lang_id("pt"))
+        text_translations = self._tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
+        df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": text_translations})
         return df_with_translations
 
 def _load_pyfunc(data_path):
