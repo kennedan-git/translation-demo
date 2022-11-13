@@ -20,7 +20,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         decoded_txt = self._pipe.tokenizer.batch_decode(encoded_txt, skip_special_tokens=True)
         return decoded_txt
 
-    def generate(self, encoded_txt,target_lang): 
+    def generate(self, encoded_txt): 
         generated_txt = self._pipe.model.generate(encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("pt"))
         return generated_txt
     
