@@ -12,15 +12,12 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
     def __init__(self, pipeline):
         self._pipe = pipeline
 
-    def encode(self, txt): 
+    def translate(self, txt):
         encoded_txt = self._pipe.tokenizer(txt, return_tensors="pt")
         encoded_txt = encoded_txt.to(self._pipe.device)
-        return encoded_txt 
-
-    def decode(self, encoded_txt): 
-        decoded_txt = self._pipe.tokenizer.batch_decode(encoded_txt, skip_special_tokens=False)
-        decoded_txt = decoded_txt.to(self._pipe.device)
-        return decoded_txt
+        generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("pt"))
+        txt_translation = self._pipe.tokenizer.batch_decode(generated_tokens, skip_special_tokens=False)
+        return txt_translation
 
     #def generate(self, **encoded_txt): 
      #   #self._pipe.model.to(self._pipe.device)
@@ -51,22 +48,22 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         #encoded_text = self._tokenizer(texts[0], return_tensors="pt")
         self._pipe.tokenizer.src_lang = "en" #ex: 'en'
 
-        str = df["content"]
-
-        #str.apply(self.encode)
+        translation = df["content"]
+        translation.apply(self.translate)
+        translation = translation.tolist()
         #print(encoded_src_txt.shape())
         #token_id=self._pipe.tokenizer.get_lang_id("pt").asString() 
         #forced_bos_token_id="128022"
 
         #debugging code / remove 
-        test_string = str[0]
-        encoded_txt = self._pipe.tokenizer(test_string, return_tensors="pt")
-        encoded_txt = encoded_txt.to(self._pipe.device)
+        #test_string = str[0]
+        #encoded_txt = self._pipe.tokenizer(test_string, return_tensors="pt")
+        #encoded_txt = encoded_txt.to(self._pipe.device)
 
-        generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("pt"))
-        text_translations = self._pipe.tokenizer.batch_decode(generated_tokens, skip_special_tokens=False)
+        #generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("pt"))
+        #text_translations = self._pipe.tokenizer.batch_decode(generated_tokens, skip_special_tokens=False)
 
-        df_with_translations = pd.DataFrame({"id": ids[0], "content": texts[0], "translation": text_translations})
+        df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": translations})
         return df_with_translations
 
 def _load_pyfunc(data_path):
