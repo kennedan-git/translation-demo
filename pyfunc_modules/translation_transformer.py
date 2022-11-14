@@ -13,7 +13,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         self._pipe = pipeline
 
     def translate(self, txt):
-        if (len(txt) > 300): 
+        if (len(txt) > 1024): 
             return "Text too long."
         encoded_txt = self._pipe.tokenizer(txt, return_tensors="pt")
         encoded_txt = encoded_txt.to(self._pipe.device)
