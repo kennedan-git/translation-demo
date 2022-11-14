@@ -14,10 +14,11 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
 
     def translate(self, txt):
         if (len(txt) > 1024): 
-            return "Text too long."
+            txt_translation = str("Text too long.")
+            return txt_translation
         encoded_txt = self._pipe.tokenizer(txt, return_tensors="pt")
         encoded_txt = encoded_txt.to(self._pipe.device)
-        generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("pt"))
+        generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("en"))
         txt_translation = self._pipe.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
         return txt_translation
 
@@ -48,7 +49,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         texts = df.content.values.tolist()
         ids = df.id.values.tolist()
         #encoded_text = self._tokenizer(texts[0], return_tensors="pt")
-        self._pipe.tokenizer.src_lang = "en" #ex: 'en'
+        self._pipe.tokenizer.src_lang = "pt" #ex: 'en'
 
         translation = df["content"]
         translation = translation.map(self.translate)
