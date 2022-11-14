@@ -53,7 +53,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
 
         str = df["content"]
 
-        str.apply(self.encode)
+        #str.apply(self.encode)
         #print(encoded_src_txt.shape())
         #token_id=self._pipe.tokenizer.get_lang_id("pt").asString() 
         #forced_bos_token_id="128022"
