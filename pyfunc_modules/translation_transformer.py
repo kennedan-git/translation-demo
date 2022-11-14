@@ -57,8 +57,9 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         #print(encoded_src_txt.shape())
         #token_id=self._pipe.tokenizer.get_lang_id("pt").asString() 
         #forced_bos_token_id="128022"
-        #debugging
-        test_string = "Abraham Lincoln cut down a cherry tree"
+
+        #debugging code / remove 
+        test_string = str[0]
         encoded_txt = self._pipe.tokenizer(test_string, return_tensors="pt")
         encoded_txt = encoded_txt.to(self._pipe.device)
 
