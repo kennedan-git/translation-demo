@@ -49,7 +49,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         self._pipe.tokenizer.src_lang = "en" #ex: 'en'
 
         translation = df["content"]
-        translation.map(self.translate)
+        translation = translation.map(self.translate)
         translations = translation.tolist()
         #print(encoded_src_txt.shape())
         #token_id=self._pipe.tokenizer.get_lang_id("pt").asString() 
