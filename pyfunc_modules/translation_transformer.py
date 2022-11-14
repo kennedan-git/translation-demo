@@ -18,7 +18,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         return encoded_txt 
 
     def decode(self, encoded_txt): 
-        decoded_txt = self._pipe.tokenizer.batch_decode(encoded_txt, skip_special_tokens=True)
+        decoded_txt = self._pipe.tokenizer.batch_decode(encoded_txt, skip_special_tokens=False)
         decoded_txt = decoded_txt.to(self._pipe.device)
         return decoded_txt
 
@@ -54,7 +54,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         str = df["content"]
 
         encoded_src_txt = str.apply(self.encode)
-        generated_tokens = self._pipe.model.generate(**encoded_src_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("pt"))
+        generated_tokens = self._pipe.model.generate(*encoded_src_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("pt"))
         text_translations = generated_tokens.apply(self.decode)
 
         df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": text_translations})
