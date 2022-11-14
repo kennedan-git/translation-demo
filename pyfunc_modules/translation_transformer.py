@@ -55,7 +55,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
 
         encoded_src_txt = str.apply(self.encode)
         #print(encoded_src_txt.shape())
-        token_id=self._pipe.tokenizer.get_lang_id("pt")
+        token_id=str(self._pipe.tokenizer.get_lang_id("pt"))
         generated_tokens = self._pipe.model.generate(**encoded_src_txt, forced_bos_token_id=token_id)
         text_translations = generated_tokens.apply(self.decode)
 
