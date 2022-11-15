@@ -69,7 +69,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         
         #translations = transDF.translation.value.tolist()
 
-        df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": translations})
+        df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": tr})
         #torch.cuda.empty_cache()
         return df_with_translations
 
