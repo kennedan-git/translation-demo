@@ -62,9 +62,9 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
 
         #for index, row in df.iterrows():
             #translations.append(self.translate(row["content"], row["src_lang"], row["target_lang"]))
-
+        self._pipe.tokenizer.src_lang = "en"
         encoded_txt = self._pipe.tokenizer(texts, return_tensors="pt", padding=True)
-        generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id(target_lang))
+        generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("pt"))
         translations = self._pipe.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
         
         #translations = transDF.translation.value.tolist()
