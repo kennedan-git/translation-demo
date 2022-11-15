@@ -55,15 +55,15 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         ids = df.id.values.tolist()
         #encoded_text = self._tokenizer(texts[0], return_tensors="pt")
         
-        translation = df["content"]
+        translations = []
 
         #translation = translation.apply(self.translate)
         df = df.reset_index()  # make sure indexes pair with number of rows
 
         for index, row in df.iterrows():
-            translation[index] = self.translate(row["content"], row["src_lang"], row["target_lang"])
+            translations.append(self.translate(row["content"], row["src_lang"], row["target_lang"])) 
         
-        translations = translation.tolist()
+        #translations = transDF.translation.value.tolist()
 
         df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": translations})
         torch.cuda.empty_cache()
