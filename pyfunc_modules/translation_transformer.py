@@ -12,16 +12,18 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
     def __init__(self, pipeline):
         self._pipe = pipeline
 
-    def translate(self, txt):
-        if (txt is None): 
+    def translate(self, txt, src_lang, target_lang):
+        if txt is None: 
             txt_translation = str("Null input value")
             return txt_translation
         if (len(txt) > 1024): 
             txt_translation = str("text too long.")
             return txt_translation
+
+        self._pipe.tokenizer.src_lang = src_lang #ex: "pt is pashtun, en english, etc"
         encoded_txt = self._pipe.tokenizer(txt, return_tensors="pt")
         encoded_txt = encoded_txt.to(self._pipe.device)
-        generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("en"))
+        generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id(target_lang))
         txt_translation = self._pipe.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
         return txt_translation
 
@@ -52,10 +54,15 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         texts = df.content.values.tolist()
         ids = df.id.values.tolist()
         #encoded_text = self._tokenizer(texts[0], return_tensors="pt")
-        self._pipe.tokenizer.src_lang = "pt" #ex: 'en'
-
+        
         translation = df["content"]
-        translation = translation.map(self.translate)
+
+        translation = translation.apply(self.translate)
+        df = df.reset_index()  # make sure indexes pair with number of rows
+
+        for index, row in df.iterrows():
+            translation[index] = self.translate(row["content"], row["src_lang"], row["target_lang"])
+        
         translations = translation.tolist()
 
         df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": translations})
