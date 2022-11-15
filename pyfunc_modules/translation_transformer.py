@@ -25,7 +25,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         encoded_txt = encoded_txt.to(self._pipe.device)
         generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id(target_lang))
         txt_translation = self._pipe.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
-        return txt_translation
+        return str(txt_translation)
 
     #def generate(self, **encoded_txt): 
      #   #self._pipe.model.to(self._pipe.device)
@@ -61,15 +61,11 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         df = df.reset_index()  # make sure indexes pair with number of rows
 
         for index, row in df.iterrows():
-            translations.append(str(self.translate(row["content"], row["src_lang"], row["target_lang"]))) 
-        
-        translations = pd.DataFrame(translations)
-        translations = translations.astype(str)
-        tr = translations.values.tolist() 
+            translations.append(self.translate(row["content"], row["src_lang"], row["target_lang"]))
         
         #translations = transDF.translation.value.tolist()
 
-        df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": tr})
+        df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": translations})
         #torch.cuda.empty_cache()
         return df_with_translations
 
