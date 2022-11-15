@@ -32,7 +32,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
       #  generated_txt = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("pt"))
        # return generated_txt
     
-    def predict(self, df):
+    def predict(self, df, src_lang, target_lang):
         """
         Inference logic that uses a Huggingface Transformer translation pipeline and generates a translation.
         Parameters
@@ -62,10 +62,10 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
 
         #for index, row in df.iterrows():
             #translations.append(self.translate(row["content"], row["src_lang"], row["target_lang"]))
-        self._pipe.tokenizer.src_lang = "en"
+        self._pipe.tokenizer.src_lang = src_lang
         encoded_txt = self._pipe.tokenizer(texts, return_tensors="pt", padding=True)
         encoded_txt = encoded_txt.to(self._pipe.device)
-        generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("pt"))
+        generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id(target_lang))
         translations = self._pipe.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
         
         #translations = transDF.translation.value.tolist()
