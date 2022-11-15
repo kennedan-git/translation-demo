@@ -57,7 +57,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         
         translation = df["content"]
 
-        translation = translation.apply(self.translate)
+        #translation = translation.apply(self.translate)
         df = df.reset_index()  # make sure indexes pair with number of rows
 
         for index, row in df.iterrows():
