@@ -69,7 +69,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         batch_size = 2
         translations = [] 
         for g, txt in df.groupby(np.arange(len(df)) // batch_size):
-            translations.append(self.translate(txt.content.values.tolist(), src_lang, target_lang))
+            translations.extend(self.translate(txt.content.values.tolist(), src_lang, target_lang))
             torch.cuda.empty_cache()
 
         #for index, row in df.iterrows():
