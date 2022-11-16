@@ -56,33 +56,21 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
 
         texts = df.content.values.tolist()
         ids = df.id.values.tolist()
-        #encoded_text = self._tokenizer(texts[0], return_tensors="pt")
-        
-        translations = []
 
-        #translation = translation.apply(self.translate)
-        df = df.reset_index()  # make sure indexes pair with number of rows   
-        #batch_size = param_dict['batch_size']  #chunk size
         src_lang = param_dict['src_lang']
         target_lang = param_dict['target_lang']
+        batch_size = param_dict['batch_size']
         
-        batch_size = 2
         translations = [] 
+        df = df.reset_index()  # make sure indexes pair with number of rows   
+
         for g, txt in df.groupby(np.arange(len(df)) // batch_size):
             translations.extend(self.translate(txt.content.values.tolist(), src_lang, target_lang))
             torch.cuda.empty_cache()
 
+        #Debug code: translate each row one at a time 
         #for index, row in df.iterrows():
             #translations.append(self.translate(row["content"], row["src_lang"], row["target_lang"]))
-
-
-        #self._pipe.tokenizer.src_lang = param_dict['src_lang']
-        #encoded_txt = self._pipe.tokenizer(texts, return_tensors="pt", padding=True)
-        #encoded_txt = encoded_txt.to(self._pipe.device)
-        #generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id(param_dict['target_lang']))
-        #translations = self._pipe.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
-        
-        #translations = transDF.translation.value.tolist()
 
         df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": translations})
         return df_with_translations
