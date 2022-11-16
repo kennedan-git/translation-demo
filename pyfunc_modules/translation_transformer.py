@@ -64,13 +64,13 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         translations = [] 
         df = df.reset_index()  # make sure indexes pair with number of rows   
 
-        #for g, txt in df.groupby(np.arange(len(df)) // batch_size):
-          #  translations.extend(self.translate(txt.content.values.tolist(), src_lang, target_lang))
-           # torch.cuda.empty_cache()
+        for g, txt in df.groupby(np.arange(len(df)) // batch_size):
+            translations.extend(self.translate(txt.content.values.tolist(), src_lang, target_lang))
+            torch.cuda.empty_cache()
 
         #Debug code: translate each row one at a time 
-        for index, row in df.iterrows():
-            translations.append(self.translate(row["content"], src_lang, target_lang)) 
+        #for index, row in df.iterrows():
+            #translations.append(self.translate(row["content"], src_lang, target_lang)) 
 
         print (translations)
         df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": translations})
