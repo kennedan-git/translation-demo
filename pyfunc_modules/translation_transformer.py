@@ -60,7 +60,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         src_lang = param_dict['src_lang']
         target_lang = param_dict['target_lang']
         batch_size = param_dict['batch_size']
-        
+
         translations = [] 
         df = df.reset_index()  # make sure indexes pair with number of rows   
 
@@ -72,6 +72,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         #for index, row in df.iterrows():
             #translations.append(self.translate(row["content"], row["src_lang"], row["target_lang"]))
 
+        print (translations)
         df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": translations})
         return df_with_translations
 
