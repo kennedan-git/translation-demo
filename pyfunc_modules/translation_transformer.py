@@ -5,6 +5,7 @@ Takes a Huggingface Transformer m2m100 Translation pipeline and registers it as 
 import mlflow
 import torch
 import pandas as pd
+import numpy as np
 import sentencepiece
 from transformers import M2M100Tokenizer, M2M100ForConditionalGeneration, pipeline
 
@@ -12,20 +13,20 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
     def __init__(self, pipeline):
         self._pipe = pipeline
 
-    def translate(self, txt, src_lang, target_lang):
-        if txt is None: 
-            txt_translation = str("Null input value")
-            return txt_translation
-        if (len(txt) > 1024): 
-            txt_translation = str("text too long.")
-            return txt_translation
+    def translate(self, srctxt, src_lang, target_lang):
+        #if srctxt is None: 
+         #   txt_translation = str("Null input value")
+          #  return txt_translation
+        #if (len(srctxt) > 1024): 
+         #   txt_translation = str("text too long.")
+          #  return txt_translation
 
         self._pipe.tokenizer.src_lang = src_lang #ex: "pt is pashtun, en english, etc"
-        encoded_txt = self._pipe.tokenizer(txt, return_tensors="pt")
+        encoded_txt = self._pipe.tokenizer(srctxt, return_tensors="pt", padding=True)
         encoded_txt = encoded_txt.to(self._pipe.device)
         generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id(target_lang))
-        txt_translation = self._pipe.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)[0]
-        return str(txt_translation)
+        txt_translation = self._pipe.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
+        return txt_translation
 
     #def generate(self, **encoded_txt): 
      #   #self._pipe.model.to(self._pipe.device)
@@ -51,7 +52,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
                 'translation (String) - translated text or document objects
         """
 
-        df, lang_dict = model_input
+        df, param_dict = model_input
 
         texts = df.content.values.tolist()
         ids = df.id.values.tolist()
@@ -60,20 +61,30 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
         translations = []
 
         #translation = translation.apply(self.translate)
-        df = df.reset_index()  # make sure indexes pair with number of rows
+        df = df.reset_index()  # make sure indexes pair with number of rows   
+        #batch_size = param_dict['batch_size']  #chunk size
+        src_lang = param_dict['src_lang']
+        target_lang = param_dict['target_lang']
+        
+        batch_size = 2
+        translations = [] 
+        for g, df in texts.groupby(np.arange(len(texts)) // batch_size):
+            translations.append(self.translate(df, src_lang, target_lang))
+            torch.cuda.empty_cache()
 
         #for index, row in df.iterrows():
             #translations.append(self.translate(row["content"], row["src_lang"], row["target_lang"]))
-        self._pipe.tokenizer.src_lang = lang_dict['src_lang']
-        encoded_txt = self._pipe.tokenizer(texts, return_tensors="pt", padding=True)
-        encoded_txt = encoded_txt.to(self._pipe.device)
-        generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id(lang_dict['target_lang']))
-        translations = self._pipe.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
+
+
+        #self._pipe.tokenizer.src_lang = param_dict['src_lang']
+        #encoded_txt = self._pipe.tokenizer(texts, return_tensors="pt", padding=True)
+        #encoded_txt = encoded_txt.to(self._pipe.device)
+        #generated_tokens = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id(param_dict['target_lang']))
+        #translations = self._pipe.tokenizer.batch_decode(generated_tokens, skip_special_tokens=True)
         
         #translations = transDF.translation.value.tolist()
 
         df_with_translations = pd.DataFrame({"id": ids, "content": texts, "translation": translations})
-        torch.cuda.empty_cache()
         return df_with_translations
 
 def _load_pyfunc(data_path):
