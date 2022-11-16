@@ -32,7 +32,7 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
       #  generated_txt = self._pipe.model.generate(**encoded_txt, forced_bos_token_id=self._pipe.tokenizer.get_lang_id("pt"))
        # return generated_txt
     
-    def predict(self, context, df):
+    def predict(self, model_input):
         """
         Inference logic that uses a Huggingface Transformer translation pipeline and generates a translation.
         Parameters
@@ -50,6 +50,8 @@ class TransformerTranslationModel(mlflow.pyfunc.PythonModel):
                 'content' (String) - original text or document objects
                 'translation (String) - translated text or document objects
         """
+
+        df, lang_dict = model_input
 
         texts = df.content.values.tolist()
         ids = df.id.values.tolist()
