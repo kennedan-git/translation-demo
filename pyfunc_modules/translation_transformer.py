@@ -1,5 +1,5 @@
 """
-Takes a Huggingface Transformer m2m100 Translation pipeline and registers it as an MLflow model.
+Takes a Huggingface Transformer m2m100 Translation tokenizer and model and registers these as an MLflow model.
 """
 
 import mlflow
